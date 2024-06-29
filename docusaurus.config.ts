@@ -93,7 +93,7 @@ const config: Config = {
           items: [
             {
               label: "文件",
-              to: "/docs/intro",
+              to: "/docs/",
             },
           ],
         },
