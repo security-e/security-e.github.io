@@ -161,3 +161,117 @@ Person sean = seanBuilder
 ```
 
 這樣就能一目瞭然每個變數代表的值了, 不用再回去翻閱類別的程式碼是怎麼實作的
+
+但 Builder 實作起來是非常麻煩的
+
+```java
+public class Person {
+  private String firstName;
+  private String secondName;
+  private String phoneNumber;
+
+  public PersonBuilder builder() {
+    return new PersonBuilder();
+  }
+
+  public static class PersonBuilder {
+    private String firstName;
+    private String secondName;
+    private String phoneNumber;
+
+    public PersonBuilder firstName(String firstName) {
+      this.firstName = firstName;
+      return this;
+    }
+
+    public PersonBuilder secondName(String secondName) {
+      this.secondName = secondName;
+      return this;
+    }
+
+    public PersonBuilder phoneNumber(String phoneNumber) {
+      this.phoneNumber = phoneNumber;
+      return this;
+    }
+
+    public PersonBuilder build() {
+      return new Person(firstName, secondName, phoneNumber);
+    }
+  }
+}
+```
+
+但只要使用 Lombok 的 `@Builder` 標註, 就能在編譯時生成同樣的程式碼
+
+```java
+@Builder
+public class Person {
+  private String firstName;
+  private String secondName;
+  private String phoneNumber;
+}
+```
+
+### List 與 Map 也難不倒 `@Builder`
+
+如果今天我們的類別裡面有 Map 或是 List 的型別, 想用 Builder Pattern 來達成疊加的效果
+
+我們可以在屬性前面加上 `@Singular` 的標註
+
+```java
+@Builder
+public class Person {
+  private String firstName;
+  private String secondName;
+  private String phoneNumber;
+  @Singular private List<String> petNames;
+}
+```
+
+在使用的時候我們就能用類似蓋房子的方式把變數疊加到 List 或是 Map 裡面,
+`@Builder` 會在類別內生成單數的方法,
+舉例來說 `private List<String> petNames` 就會生成 `.petName(petName)` 的方法
+
+```java
+List<String> petNames = List.of("Amy", "Ben");
+Person.PersonBuilder personBuilder = Person.builder();
+
+personBuilder
+  .firstName("Sean")
+  .secondName("Chang")
+  .phoneNumber("0912345678");
+
+// 效果等同於 personBuilder.petNames(petNames)
+for (String petName : petNames) {
+  personBuilder.petName(petName);
+}
+
+Person person = personBuilder.build();
+```
+
+如果是 Map 的型別
+
+```java
+@Builder
+public class Person {
+  private String firstName;
+  private String secondName;
+  private String phoneNumber;
+  @Singular private Map<String, Integer> accounts;
+}
+```
+
+使用起來則會像這樣
+
+```java
+Person.PersonBuilder builder = Person.builder();
+
+builder
+  .firstName("Sean")
+  .secondName("Chang")
+  .phoneNumber("0912345678")
+  .account("Cathay", 10000)
+  .account("E-Sun", 5000);
+```
+
+使用了 Lombok 以後, 以往非常好用但實作非常麻煩的 Builder Pattern 也變得非常容易上手
